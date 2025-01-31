@@ -16,7 +16,7 @@ repos:
   -   repo: https://github.com/golangci/golangci-lint
       rev: v1.63.4
       hooks:
-        -   id: golangci-lint
+        -   id: golangci-lint-full
         -   id: golangci-lint-config-verify
   -   repo: https://github.com/markdownlint/markdownlint
       rev: v0.12.0
