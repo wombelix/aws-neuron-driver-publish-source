@@ -4,4 +4,4 @@
 
 module git.sr.ht/~wombelix/aws-neuron-driver-publish-source
 
-go 1.23
+go 1.22
