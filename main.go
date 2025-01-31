@@ -4,7 +4,10 @@
 
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 const (
 	REPO_URL        = "https://yum.repos.neuron.amazonaws.com"
@@ -13,6 +16,8 @@ const (
 	ARCHIVE_FOLDER  = "archive"
 	SOURCE_FOLDER   = "src"
 	CHECKSUM_SUFFIX = "sha256"
+	CHANGELOG_URL   = "https://raw.githubusercontent.com/aws-neuron/aws-neuron-sdk/refs/heads/master/release-notes/runtime/aws-neuronx-dkms/index.rst"
+	CHANGELOG_FILE  = "release-notes-runtime-aws-neuronx-dkms.rst"
 )
 
 func checkError(e error) {
@@ -23,5 +28,14 @@ func checkError(e error) {
 
 func main() {
 	repofilesxml := ProcessRepomd()
-	fmt.Println(string(repofilesxml["repomd"]))
+	//fmt.Println(string(repofilesxml["repomd"]))
+
+	//changelog := ProcessChangelog()
+	//for k, _ := range changelog {
+	//	fmt.Println(k)
+	//}
+
+	primary := ProcessPrimary(repofilesxml["primary"])
+	primaryJson, _ := json.MarshalIndent(primary, "", "\t")
+	fmt.Println(string(primaryJson))
 }
