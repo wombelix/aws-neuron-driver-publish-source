@@ -14,7 +14,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -124,28 +123,6 @@ func writeChecksumToFile(checksum string, outFolder string, outFile string) erro
 	return writeStringToFile(checksum, outFolder, outFile, CHECKSUM_SUFFIX)
 }
 
-func normalizeFilename(filename string) string {
-	if strings.Contains(filename, "-") {
-		filename = dropChecksumFromFilename(filename)
-	}
-
-	// Drop folder from filename string
-	if strings.Contains(filename, "/") {
-		filename = filepath.Base(filename)
-	}
-
-	return filename
-}
-
-func dropChecksumFromFilename(filename string) string {
-	// Drop Checksum prefix from filename
-	// Example:
-	//		057288a8dfecacaf588228e429c1511a3f1f3801b1d2fb4a068d5c14e3d1fb27-filelists.xml.gz
-	// to
-	//		filelists.xml.gz
-	return strings.Split(filename, "-")[1]
-}
-
 func parseRepomd(repomdxml []byte) (*Repomd, error) {
 	// Unmarshal XML content into Repomd struct
 	var repomd Repomd
@@ -192,7 +169,6 @@ func ProcessRepomd() map[string][]byte {
 	for _, data := range repomd.Data {
 		switch data.Type {
 		case "primary", "filelists", "other":
-			fmt.Println(data.Type)
 			repofilesxml[data.Type], err = downloadAndReturnFileContent(REPO_URL, data.Location.HRef, ARCHIVE_FOLDER)
 			checkError(err)
 

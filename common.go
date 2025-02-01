@@ -1,0 +1,68 @@
+// SPDX-FileCopyrightText: 2025 Dominik Wombacher <dominik@wombacher.cc>
+//
+// SPDX-License-Identifier: MIT
+
+package main
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+func downloadFile(url string, filename string, folder string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
+
+	if resp.StatusCode != 200 {
+		panic(fmt.Sprintf("status code %d", resp.StatusCode))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(folder, 0700)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(fmt.Sprintf("%s/%s", folder, filename), body, 0644)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func normalizeFilename(filename string) string {
+	if strings.Contains(filename, "-") {
+		filename = dropChecksumFromFilename(filename)
+	}
+
+	// Drop folder from filename string
+	if strings.Contains(filename, "/") {
+		filename = filepath.Base(filename)
+	}
+
+	return filename
+}
+
+func dropChecksumFromFilename(filename string) string {
+	// Drop Checksum prefix from filename
+	// Example:
+	//		057288a8dfecacaf588228e429c1511a3f1f3801b1d2fb4a068d5c14e3d1fb27-filelists.xml.gz
+	// to
+	//		filelists.xml.gz
+	return strings.Split(filename, "-")[1]
+}
