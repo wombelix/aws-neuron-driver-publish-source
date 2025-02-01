@@ -8,44 +8,10 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"regexp"
 	"strings"
 )
-
-func downloadChangelog() error {
-	resp, err := http.Get(CHANGELOG_URL)
-	if err != nil {
-		return err
-	}
-
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(resp.Body)
-
-	if resp.StatusCode != 200 {
-		panic(fmt.Sprintf("status code %d", resp.StatusCode))
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	err = os.MkdirAll(ARCHIVE_FOLDER, 0700)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, CHANGELOG_FILE), body, 0644)
-	if err != nil {
-		return err
-	}
-
-	return err
-}
 
 func parseChangelog() map[string][]string {
 	file := fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, CHANGELOG_FILE)
@@ -86,7 +52,7 @@ func parseChangelog() map[string][]string {
 }
 
 func ProcessChangelog() map[string][]string {
-	err := downloadChangelog()
+	err := downloadFile(CHANGELOG_URL, CHANGELOG_FILE, ARCHIVE_FOLDER)
 	checkError(err)
 
 	return parseChangelog()
