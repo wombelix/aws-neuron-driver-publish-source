@@ -6,16 +6,23 @@ SPDX-License-Identifier: CC0-1.0
 
 # AWS Neuron Driver - Publish Source
 
+Disclaimer: This is a personal project and not related to,
+or endorsed by, Amazon Web Services.
+
 This repository contains a command line tool, written in Go,
 to publish the source code of new AWS Neuron Driver releases.
 
-Why? The driver is licensed under GPL 2 but only distributed
-as rpm package with a DKMS wrapper.
-The code is not available as tar file or in a public git repository.
+Why? The driver is licensed under GPL-2.0 but currently
+only distributed as rpm package with a DKMS wrapper.
+The code is not available as archive or in a public git repository.
 
-The tool is used to push updates to the `aws-neuron-driver` repository.
-Checksum and GPG verifications are performed and metadata added.
-This allows to validate where the code is coming from and that it wasn't altered.
+The tool is used to add releases and code updates to the unofficial
+[aws-neuron-driver](https://git.sr.ht/~wombelix/aws-neuron-driver)
+repository. Checksum and GPG verifications are performed and metadata added.
+This creates an audit trail and allows to validate that the code is coming
+from the official repository
+[yum.repos.neuron.amazonaws.com](https://yum.repos.neuron.amazonaws.com/)
+and wasn't altered.
 
 [![REUSE status](https://api.reuse.software/badge/git.sr.ht/~wombelix/aws-neuron-driver-publish-source)](https://api.reuse.software/info/git.sr.ht/~wombelix/aws-neuron-driver-publish-source)
 
