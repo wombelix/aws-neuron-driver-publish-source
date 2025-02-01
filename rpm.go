@@ -60,10 +60,10 @@ func getFilenamesInDirectory(directory string) []string {
 func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 	var err error
 
-	err = downloadFile(fmt.Sprintf("%s/%s", REPO_URL, GPG_PUB_FILE), GPG_PUB_FILE, ARCHIVE_FOLDER)
+	err = downloadFile(fmt.Sprintf("%s/%s", REPO_URL, GPG_PUB_FILE), GPG_PUB_FILE, *archiveFolderName)
 	checkError(err)
 
-	rpmFolder := fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, ARCHIVE_RPM_FOLDER)
+	rpmFolder := fmt.Sprintf("%s/%s", *archiveFolderName, *archiveRpmFolderName)
 	existingFiles := getFilenamesInDirectory(rpmFolder)
 
 	rpms := make(map[string][]*rpmutils.Signature)
@@ -85,7 +85,7 @@ func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 
 		sigs, err := validateSignature(
 			rpmfilepath,
-			fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, GPG_PUB_FILE))
+			fmt.Sprintf("%s/%s", *archiveFolderName, GPG_PUB_FILE))
 		checkError(err)
 
 		err = verifyChecksum(rpmfilepath, pkg.Checksum.Value)

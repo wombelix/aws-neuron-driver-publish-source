@@ -113,7 +113,7 @@ func ProcessRepomd() map[string][]byte {
 	var err error
 	repofilesxml := make(map[string][]byte)
 
-	repofilesxml["repomd"], err = downloadAndReturnFileContent(REPO_URL, REPOMD_FILE, ARCHIVE_FOLDER)
+	repofilesxml["repomd"], err = downloadAndReturnFileContent(REPO_URL, REPOMD_FILE, *archiveFolderName)
 	checkError(err)
 
 	repomd, err := parseRepomd(repofilesxml["repomd"])
@@ -122,14 +122,14 @@ func ProcessRepomd() map[string][]byte {
 	for _, data := range repomd.Data {
 		switch data.Type {
 		case "primary", "filelists", "other":
-			repofilesxml[data.Type], err = downloadAndReturnFileContent(REPO_URL, data.Location.HRef, ARCHIVE_FOLDER)
+			repofilesxml[data.Type], err = downloadAndReturnFileContent(REPO_URL, data.Location.HRef, *archiveFolderName)
 			checkError(err)
 
 			filenameWithoutFolderAndChecksum := normalizeFilename(data.Location.HRef)
-			err = writeChecksumToFile(ARCHIVE_FOLDER, filenameWithoutFolderAndChecksum, data.Checksum.Value)
+			err = writeChecksumToFile(*archiveFolderName, filenameWithoutFolderAndChecksum, data.Checksum.Value)
 			checkError(err)
 
-			file := fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, filenameWithoutFolderAndChecksum)
+			file := fmt.Sprintf("%s/%s", *archiveFolderName, filenameWithoutFolderAndChecksum)
 			err = verifyChecksum(file, data.Checksum.Value)
 			checkError(err)
 		}

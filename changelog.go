@@ -14,7 +14,7 @@ import (
 )
 
 func parseChangelog() map[string][]string {
-	file := fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, CHANGELOG_FILE)
+	file := fmt.Sprintf("%s/%s", *archiveFolderName, CHANGELOG_FILE)
 
 	f, err := os.Open(file)
 	checkError(err)
@@ -52,7 +52,7 @@ func parseChangelog() map[string][]string {
 }
 
 func ProcessChangelog() map[string][]string {
-	err := downloadFile(CHANGELOG_URL, CHANGELOG_FILE, ARCHIVE_FOLDER)
+	err := downloadFile(CHANGELOG_URL, CHANGELOG_FILE, *archiveFolderName)
 	checkError(err)
 
 	return parseChangelog()
