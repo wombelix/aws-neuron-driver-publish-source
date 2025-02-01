@@ -5,12 +5,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/ProtonMail/go-crypto/openpgp"
 	"github.com/sassoftware/go-rpmutils"
 	"os"
 	"path/filepath"
+	"slices"
 )
 
 func validateSignature(rpmfile string, gpgpubfile string) ([]*rpmutils.Signature, error) {
@@ -45,22 +45,42 @@ func validateSignature(rpmfile string, gpgpubfile string) ([]*rpmutils.Signature
 	return signature, nil
 }
 
+func getFilenamesInDirectory(directory string) []string {
+	folder, err := os.Open(directory)
+	checkError(err)
+	defer func(folder *os.File) {
+		_ = folder.Close()
+	}(folder)
+
+	filenames, _ := folder.Readdirnames(0) // 0 to read all files and folders
+
+	return filenames
+}
+
 func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 	var err error
 
 	err = downloadFile(fmt.Sprintf("%s/%s", REPO_URL, GPG_PUB_FILE), GPG_PUB_FILE, ARCHIVE_FOLDER)
 	checkError(err)
 
+	rpmFolder := fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, ARCHIVE_RPM_FOLDER)
+	existingFiles := getFilenamesInDirectory(rpmFolder)
+
 	rpms := make(map[string][]*rpmutils.Signature)
+
 	for _, pkg := range *packages {
 		filename := filepath.Base(pkg.Location.HRef)
-		rpmfolder := fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, ARCHIVE_RPM_FOLDER)
-		rpmfilepath := filepath.Join(rpmfolder, filename)
+		rpmfilepath := filepath.Join(rpmFolder, filename)
+
+		// Skip rpm files that already exist in the archive folder
+		if slices.Contains(existingFiles, filename) {
+			continue
+		}
 
 		err = downloadFile(
 			fmt.Sprintf("%s/%s", REPO_URL, filename),
 			filename,
-			rpmfolder)
+			rpmFolder)
 		checkError(err)
 
 		sigs, err := validateSignature(
@@ -71,15 +91,11 @@ func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 		err = verifyChecksum(rpmfilepath, pkg.Checksum.Value)
 		checkError(err)
 
-		err = writeChecksumToFile(rpmfolder, filename, pkg.Checksum.Value)
+		err = writeChecksumToFile(rpmFolder, filename, pkg.Checksum.Value)
 		checkError(err)
 
 		rpms[filename] = sigs
-		break
 	}
-
-	rpmsJson, _ := json.MarshalIndent(rpms, "", "\t")
-	fmt.Println(string(rpmsJson))
 
 	return rpms
 }
