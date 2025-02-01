@@ -6,8 +6,12 @@ SPDX-License-Identifier: CC0-1.0
 
 # AWS Neuron Driver - Publish Source
 
-Disclaimer: This is a personal project and not related to,
-or endorsed by, Amazon Web Services.
+## Disclaimer
+
+**This is a personal project and not related to,
+or endorsed by, Amazon Web Services.**
+
+-----
 
 This repository contains a command line tool, written in Go,
 to publish the source code of new AWS Neuron Driver releases.
