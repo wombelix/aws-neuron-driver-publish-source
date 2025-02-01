@@ -5,6 +5,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -65,4 +67,36 @@ func dropChecksumFromFilename(filename string) string {
 	// to
 	//		filelists.xml.gz
 	return strings.Split(filename, "-")[1]
+}
+
+func verifyChecksum(file string, checksum string) error {
+	f, err := os.Open(file)
+	checkError(err)
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	h := sha256.New()
+
+	_, err = io.Copy(h, f)
+	checkError(err)
+
+	fileChecksum := hex.EncodeToString(h.Sum(nil))
+	if fileChecksum == checksum {
+		return nil
+	}
+
+	return fmt.Errorf("Checksum %s does not match for file %s", fileChecksum, file)
+}
+
+func writeChecksumToFile(folder string, file string, checksum string) error {
+	err := os.MkdirAll(folder, 0700)
+	if err != nil {
+		return err
+	}
+
+	file = fmt.Sprintf("%s.%s", file, CHECKSUM_SUFFIX)
+
+	err = os.WriteFile(fmt.Sprintf("%s/%s", folder, file), []byte(checksum), 0644)
+	return err
 }

@@ -7,8 +7,6 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -119,10 +117,6 @@ func writeStringToFile(content string, outFolder string, outFile string, suffix 
 	return err
 }
 
-func writeChecksumToFile(checksum string, outFolder string, outFile string) error {
-	return writeStringToFile(checksum, outFolder, outFile, CHECKSUM_SUFFIX)
-}
-
 func parseRepomd(repomdxml []byte) (*Repomd, error) {
 	// Unmarshal XML content into Repomd struct
 	var repomd Repomd
@@ -131,29 +125,6 @@ func parseRepomd(repomdxml []byte) (*Repomd, error) {
 		return nil, err
 	}
 	return &repomd, nil
-}
-
-func verifyChecksum(folder string, file string, checksum string) error {
-	filename := normalizeFilename(file)
-	filename = fmt.Sprintf("%s/%s", folder, filename)
-
-	f, err := os.Open(filename)
-	checkError(err)
-	defer func(f *os.File) {
-		_ = f.Close()
-	}(f)
-
-	h := sha256.New()
-
-	_, err = io.Copy(h, f)
-	checkError(err)
-
-	fileChecksum := hex.EncodeToString(h.Sum(nil))
-	if fileChecksum == checksum {
-		return nil
-	}
-
-	return fmt.Errorf("Checksum %s does not match for file %s", fileChecksum, filename)
 }
 
 func ProcessRepomd() map[string][]byte {
@@ -172,10 +143,12 @@ func ProcessRepomd() map[string][]byte {
 			repofilesxml[data.Type], err = downloadAndReturnFileContent(REPO_URL, data.Location.HRef, ARCHIVE_FOLDER)
 			checkError(err)
 
-			err = writeChecksumToFile(data.Checksum.Value, ARCHIVE_FOLDER, data.Location.HRef)
+			filenameWithoutFolderAndChecksum := normalizeFilename(data.Location.HRef)
+			err = writeChecksumToFile(ARCHIVE_FOLDER, filenameWithoutFolderAndChecksum, data.Checksum.Value)
 			checkError(err)
 
-			err = verifyChecksum(ARCHIVE_FOLDER, data.Location.HRef, data.Checksum.Value)
+			file := fmt.Sprintf("%s/%s", ARCHIVE_FOLDER, filenameWithoutFolderAndChecksum)
+			err = verifyChecksum(file, data.Checksum.Value)
 			checkError(err)
 		}
 	}
