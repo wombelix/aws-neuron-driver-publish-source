@@ -99,24 +99,6 @@ func downloadAndReturnFileContent(repourl string, file string, outFolder string)
 	return body, err
 }
 
-func writeStringToFile(content string, outFolder string, outFile string, suffix string) error {
-	err := os.MkdirAll(outFolder, 0700)
-	if err != nil {
-		return err
-	}
-
-	outContent := []byte(content)
-
-	outFile = normalizeFilename(outFile)
-
-	if suffix != "" {
-		outFile = fmt.Sprintf("%s.%s", outFile, suffix)
-	}
-
-	err = os.WriteFile(fmt.Sprintf("%s/%s", outFolder, outFile), outContent, 0644)
-	return err
-}
-
 func parseRepomd(repomdxml []byte) (*Repomd, error) {
 	// Unmarshal XML content into Repomd struct
 	var repomd Repomd
