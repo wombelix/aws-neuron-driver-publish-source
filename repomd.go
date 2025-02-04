@@ -135,5 +135,11 @@ func ProcessRepomd() map[string][]byte {
 		}
 	}
 
+	if gitWorktreeModified(*gitRepoPath) {
+		featureBranch := "feat-update-archive-repo-files"
+		commitMsg := "feat: Update archive - repo files\n\n"
+		featureBranchCommitMerge(*gitRepoPath, featureBranch, commitMsg)
+	}
+
 	return repofilesxml
 }

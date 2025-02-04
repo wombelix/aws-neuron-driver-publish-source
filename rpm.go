@@ -63,6 +63,12 @@ func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 	err = downloadFile(fmt.Sprintf("%s/%s", REPO_URL, GPG_PUB_FILE), GPG_PUB_FILE, *archiveFolderName)
 	checkError(err)
 
+	if gitWorktreeModified(*gitRepoPath) {
+		featureBranch := "feat-update-archive-gpg-pub-key"
+		commitMsg := "feat: Update archive - GPG Public Key\n\n"
+		featureBranchCommitMerge(*gitRepoPath, featureBranch, commitMsg)
+	}
+
 	rpmFolder := fmt.Sprintf("%s/%s", *archiveFolderName, *archiveRpmFolderName)
 	existingFiles := getFilenamesInDirectory(rpmFolder)
 

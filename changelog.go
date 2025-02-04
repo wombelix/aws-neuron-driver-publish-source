@@ -55,5 +55,11 @@ func ProcessChangelog() map[string][]string {
 	err := downloadFile(CHANGELOG_URL, CHANGELOG_FILE, *archiveFolderName)
 	checkError(err)
 
+	if gitWorktreeModified(*gitRepoPath) {
+		featureBranch := "feat-update-archive-release-notes"
+		commitMsg := "feat: Update archive - release notes\n\n"
+		featureBranchCommitMerge(*gitRepoPath, featureBranch, commitMsg)
+	}
+
 	return parseChangelog()
 }
