@@ -7,10 +7,12 @@ package main
 import (
 	"fmt"
 	"github.com/ProtonMail/go-crypto/openpgp"
+	"github.com/hashicorp/go-version"
 	"github.com/sassoftware/go-rpmutils"
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 )
 
 func validateSignature(rpmfile string, gpgpubfile string) ([]*rpmutils.Signature, error) {
@@ -57,7 +59,7 @@ func getFilenamesInDirectory(directory string) []string {
 	return filenames
 }
 
-func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
+func ProcessRpm(packages map[string]*PrimaryPackage, changelog map[string][]string) {
 	var err error
 
 	err = downloadFile(fmt.Sprintf("%s/%s", REPO_URL, GPG_PUB_FILE), GPG_PUB_FILE, *archiveFolderName)
@@ -70,18 +72,30 @@ func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 	}
 
 	rpmFolder := fmt.Sprintf("%s/%s", *archiveFolderName, *archiveRpmFolderName)
-	existingFiles := getFilenamesInDirectory(rpmFolder)
 
-	rpms := make(map[string][]*rpmutils.Signature)
+	versionsSlice := make([]string, 0, len(packages))
+	for k := range packages {
+		versionsSlice = append(versionsSlice, k)
+	}
 
-	for _, pkg := range *packages {
-		filename := filepath.Base(pkg.Location.HRef)
-		rpmfilepath := filepath.Join(rpmFolder, filename)
+	versions := make([]*version.Version, len(versionsSlice))
+	for i, ver := range versionsSlice {
+		v, _ := version.NewVersion(ver)
+		versions[i] = v
+	}
+	sort.Sort(version.Collection(versions))
 
-		// Skip rpm files that already exist in the archive folder
-		if slices.Contains(existingFiles, filename) {
+	gitTags := getGitTags(*gitRepoPath)
+
+	for _, ver := range versions {
+		if slices.Contains(gitTags, ver.Original()) {
 			continue
 		}
+
+		pkg := packages[ver.Original()]
+
+		filename := filepath.Base(pkg.Location.HRef)
+		rpmfilepath := filepath.Join(rpmFolder, filename)
 
 		err = downloadFile(
 			fmt.Sprintf("%s/%s", REPO_URL, filename),
@@ -89,7 +103,7 @@ func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 			rpmFolder)
 		checkError(err)
 
-		sigs, err := validateSignature(
+		_, err := validateSignature(
 			rpmfilepath,
 			fmt.Sprintf("%s/%s", *archiveFolderName, GPG_PUB_FILE))
 		checkError(err)
@@ -100,8 +114,7 @@ func ProcessRpm(packages *[]PrimaryPackage) map[string][]*rpmutils.Signature {
 		err = writeChecksumToFile(rpmFolder, filename, pkg.Checksum.Value)
 		checkError(err)
 
-		rpms[filename] = sigs
+		break
 	}
 
-	return rpms
 }

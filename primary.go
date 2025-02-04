@@ -18,6 +18,7 @@ type PrimaryPackage struct {
 	XMLName     xml.Name        `xml:"package"`
 	Type        string          `xml:"type,attr"`
 	Name        string          `xml:"name"`
+	Arch        string          `xml:"arch"`
 	Version     PrimaryVersion  `xml:"version"`
 	Checksum    PrimaryChecksum `xml:"checksum"`
 	Summary     string          `xml:"summary"`
@@ -55,7 +56,7 @@ type PrimaryFormat struct {
 	BuildHost string   `xml:"buildhost"`
 }
 
-func parsePrimary(primaryxml []byte) (*[]PrimaryPackage, error) {
+func parsePrimary(primaryxml []byte) (map[string]*PrimaryPackage, error) {
 	// Unmarshal XML content into PrimaryPackage struct
 	var primary PrimaryMetadata
 	err := xml.Unmarshal(primaryxml, &primary)
@@ -63,17 +64,18 @@ func parsePrimary(primaryxml []byte) (*[]PrimaryPackage, error) {
 		return nil, err
 	}
 
-	var packages []PrimaryPackage
+	var packages = make(map[string]*PrimaryPackage)
 	for _, pkg := range primary.Package {
-		if pkg.Name == "aws-neuron-dkms" || pkg.Name == "aws-neuronx-dkms" {
-			packages = append(packages, pkg)
+		if (pkg.Name == "aws-neuron-dkms" || pkg.Name == "aws-neuronx-dkms") && pkg.Arch == "noarch" {
+			packages[pkg.Version.Version] = &pkg
+
 		}
 	}
 
-	return &packages, nil
+	return packages, nil
 }
 
-func ProcessPrimary(primaryxml []byte) *[]PrimaryPackage {
+func ProcessPrimary(primaryxml []byte) map[string]*PrimaryPackage {
 	primary, err := parsePrimary(primaryxml)
 	checkError(err)
 

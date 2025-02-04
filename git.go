@@ -101,3 +101,20 @@ func featureBranchCommitMerge(directory string, featureBranch string, commitMsg 
 	err = repo.Storer.RemoveReference(referenceName)
 	checkError(err)
 }
+
+func getGitTags(directory string) []string {
+	var err error
+	repo := getGitRepo(directory)
+
+	tagsIter, err := repo.Tags()
+	checkError(err)
+
+	var tags []string
+	err = tagsIter.ForEach(func(t *plumbing.Reference) error {
+		tags = append(tags, t.Name().Short())
+		return nil
+	})
+	checkError(err)
+
+	return tags
+}

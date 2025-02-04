@@ -53,7 +53,6 @@ func main() {
 	//primaryJson, _ := json.MarshalIndent(primary, "", "\t")
 	//fmt.Println(string(primaryJson))
 
-	rpms := ProcessRpm(primary)
+	ProcessRpm(primary, changelog)
 
-	ProcessSource(changelog, primary, rpms)
 }
