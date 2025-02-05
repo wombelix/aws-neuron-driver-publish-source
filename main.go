@@ -7,6 +7,8 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log/slog"
+	"os"
 )
 
 const (
@@ -23,6 +25,7 @@ var (
 	archiveFolderName    *string
 	archiveRpmFolderName *string
 	sourceFolderName     *string
+	logger               *slog.Logger
 )
 
 func checkError(e error) {
@@ -36,10 +39,20 @@ func main() {
 	archiveFolderName = flag.String("archive-folder", "archive", "Sub-folder in the git repo where to store and archive processed files.")
 	archiveRpmFolderName = flag.String("archive-rpm-folder", "rpm", "Sub-folder within the archive directory to store processed RPM files.")
 	sourceFolderName = flag.String("source-folder", "src", "Sub-folder in the git repo where to store the aws-neuron-driver source code.")
+	logLevel := flag.String("loglevel", "INFO", "Log level, available options: INFO (default), DEBUG")
 	flag.Parse()
 
 	*archiveFolderName = fmt.Sprintf("%s/%s", *gitRepoPath, *archiveFolderName)
 	*sourceFolderName = fmt.Sprintf("%s/%s", *gitRepoPath, *sourceFolderName)
+
+	level := slog.LevelInfo
+	if *logLevel == "DEBUG" {
+		level = slog.LevelDebug
+	}
+	logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+		Level:     level,
+	}))
 
 	repofilesxml := ProcessRepomd()
 

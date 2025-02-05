@@ -72,7 +72,9 @@ func featureBranchCommitMergeTag(directory string, featureBranch string, commitM
 			commitMsg += fmt.Sprintf("- %s: %s\n", string(status.Worktree), path)
 		}
 	}
-	commitMsg += "\n-----\n"
+	commitMsg += "-----\n"
+
+	logger.Debug(commitMsg)
 
 	var hash plumbing.Hash
 	hash, err = worktree.Commit(commitMsg, &git.CommitOptions{
