@@ -43,6 +43,10 @@ func gitWorktreeModified(directory string) bool {
 }
 
 func featureBranchCommitMerge(directory string, featureBranch string, commitMsg string) {
+	featureBranchCommitMergeTag(directory, featureBranch, commitMsg, "")
+}
+
+func featureBranchCommitMergeTag(directory string, featureBranch string, commitMsg string, tag string) {
 	var err error
 	repo := getGitRepo(directory)
 	worktree := getGitRepoWorktreeFromRepo(repo)
@@ -59,19 +63,27 @@ func featureBranchCommitMerge(directory string, featureBranch string, commitMsg 
 	worktreeStatus, err := worktree.Status()
 	checkError(err)
 
+	commitMsg += "Files\n-----\n"
 	for path, status := range worktreeStatus {
 		if status.Worktree != git.Unmodified {
 			_, err = worktree.Add(path)
 			checkError(err)
 
-			commitMsg += fmt.Sprintf("- %s\n", path)
+			commitMsg += fmt.Sprintf("- %s: %s\n", string(status.Worktree), path)
 		}
 	}
+	commitMsg += "\n-----\n"
 
-	_, err = worktree.Commit(commitMsg, &git.CommitOptions{
+	var hash plumbing.Hash
+	hash, err = worktree.Commit(commitMsg, &git.CommitOptions{
 		All: true,
 	})
 	checkError(err)
+
+	if tag != "" {
+		_, err = repo.CreateTag(tag, hash, nil)
+		checkError(err)
+	}
 
 	err = worktree.Checkout(&git.CheckoutOptions{
 		Branch: plumbing.Main,
