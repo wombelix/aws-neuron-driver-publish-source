@@ -164,7 +164,7 @@ func ProcessRpm(packages map[string]*PrimaryPackage, changelog map[string][]stri
 				releaseNotes = strings.TrimLeft(releaseNotes, "\n")
 				releaseNotes = strings.TrimRight(releaseNotes, "\n")
 
-				releaseNotes = "\nRelease Notes\n-------------\n" + releaseNotes
+				releaseNotes = "\n\nRelease Notes\n-------------\n" + releaseNotes
 				releaseNotes += "\n-------------\n"
 			}
 
@@ -177,6 +177,7 @@ func ProcessRpm(packages map[string]*PrimaryPackage, changelog map[string][]stri
 Source code extracted from file: %s
 RPM Downloaded from repository: %s
 %s
+
 Metadata
 --------
 Package: %s
@@ -194,6 +195,7 @@ GPG key fingerprint: %s
 GPG check: OK
 SHA256 check: OK
 --------
+
 
 `,
 				pkg.Version.Version,
