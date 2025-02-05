@@ -10,12 +10,12 @@ import (
 )
 
 const (
-	REPO_URL        = "https://yum.repos.neuron.amazonaws.com"
-	REPOMD_FILE     = "repodata/repomd.xml"
-	GPG_PUB_FILE    = "GPG-PUB-KEY-AMAZON-AWS-NEURON.PUB"
-	CHECKSUM_SUFFIX = "sha256"
-	CHANGELOG_URL   = "https://raw.githubusercontent.com/aws-neuron/aws-neuron-sdk/refs/heads/master/release-notes/runtime/aws-neuronx-dkms/index.rst"
-	CHANGELOG_FILE  = "release-notes-runtime-aws-neuronx-dkms.rst"
+	RepoUrl        = "https://yum.repos.neuron.amazonaws.com"
+	RepomdFile     = "repodata/repomd.xml"
+	GpgPubFile     = "GPG-PUB-KEY-AMAZON-AWS-NEURON.PUB"
+	ChecksumSuffix = "sha256"
+	ChangelogUrl   = "https://raw.githubusercontent.com/aws-neuron/aws-neuron-sdk/refs/heads/master/release-notes/runtime/aws-neuronx-dkms/index.rst"
+	ChangelogFile  = "release-notes-runtime-aws-neuronx-dkms.rst"
 )
 
 var (
@@ -42,16 +42,10 @@ func main() {
 	*sourceFolderName = fmt.Sprintf("%s/%s", *gitRepoPath, *sourceFolderName)
 
 	repofilesxml := ProcessRepomd()
-	//fmt.Println(string(repofilesxml["repomd"]))
 
 	changelog := ProcessChangelog()
-	//for k, _ := range changelog {
-	//	fmt.Println(k)
-	//}
 
 	primary := ProcessPrimary(repofilesxml["primary"])
-	//primaryJson, _ := json.MarshalIndent(primary, "", "\t")
-	//fmt.Println(string(primaryJson))
 
 	ProcessRpm(primary, changelog)
 

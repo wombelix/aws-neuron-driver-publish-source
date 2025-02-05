@@ -15,11 +15,9 @@ import (
 	"strings"
 )
 
-func downloadFile(url string, filename string, folder string) error {
+func downloadFile(url string, filename string, folder string) {
 	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
+	checkError(err)
 
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
@@ -30,21 +28,13 @@ func downloadFile(url string, filename string, folder string) error {
 	}
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	checkError(err)
 
 	err = os.MkdirAll(folder, 0700)
-	if err != nil {
-		return err
-	}
+	checkError(err)
 
 	err = os.WriteFile(fmt.Sprintf("%s/%s", folder, filename), body, 0644)
-	if err != nil {
-		return err
-	}
-
-	return err
+	checkError(err)
 }
 
 func normalizeFilename(filename string) string {
@@ -72,6 +62,7 @@ func dropChecksumFromFilename(filename string) string {
 func verifyChecksum(file string, checksum string) error {
 	f, err := os.Open(file)
 	checkError(err)
+
 	defer func(f *os.File) {
 		_ = f.Close()
 	}(f)
@@ -86,7 +77,7 @@ func verifyChecksum(file string, checksum string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Checksum %s does not match for file %s", fileChecksum, file)
+	return fmt.Errorf("checksum %s does not match for file %s", fileChecksum, file)
 }
 
 func writeChecksumToFile(folder string, file string, checksum string) error {
@@ -95,7 +86,7 @@ func writeChecksumToFile(folder string, file string, checksum string) error {
 		return err
 	}
 
-	file = fmt.Sprintf("%s.%s", file, CHECKSUM_SUFFIX)
+	file = fmt.Sprintf("%s.%s", file, ChecksumSuffix)
 
 	err = os.WriteFile(fmt.Sprintf("%s/%s", folder, file), []byte(checksum), 0644)
 	return err

@@ -56,13 +56,11 @@ type PrimaryFormat struct {
 	BuildHost string   `xml:"buildhost"`
 }
 
-func parsePrimary(primaryxml []byte) (map[string]*PrimaryPackage, error) {
+func parsePrimary(primaryxml []byte) map[string]*PrimaryPackage {
 	// Unmarshal XML content into PrimaryPackage struct
 	var primary PrimaryMetadata
 	err := xml.Unmarshal(primaryxml, &primary)
-	if err != nil {
-		return nil, err
-	}
+	checkError(err)
 
 	var packages = make(map[string]*PrimaryPackage)
 	for _, pkg := range primary.Package {
@@ -72,12 +70,11 @@ func parsePrimary(primaryxml []byte) (map[string]*PrimaryPackage, error) {
 		}
 	}
 
-	return packages, nil
+	return packages
 }
 
 func ProcessPrimary(primaryxml []byte) map[string]*PrimaryPackage {
-	primary, err := parsePrimary(primaryxml)
-	checkError(err)
+	primary := parsePrimary(primaryxml)
 
 	return primary
 }

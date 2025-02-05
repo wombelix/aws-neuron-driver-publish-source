@@ -48,13 +48,11 @@ type Location struct {
 	HRef    string   `xml:"href,attr"`
 }
 
-func downloadAndReturnFileContent(repourl string, file string, outFolder string) ([]byte, error) {
+func downloadAndReturnFileContent(repourl string, file string, outFolder string) []byte {
 	url := fmt.Sprintf("%s/%s", repourl, file)
 
 	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
+	checkError(err)
 
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
@@ -65,21 +63,15 @@ func downloadAndReturnFileContent(repourl string, file string, outFolder string)
 	}
 
 	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
+	checkError(err)
 
 	err = os.MkdirAll(outFolder, 0700)
-	if err != nil {
-		return nil, err
-	}
+	checkError(err)
 
 	outFile := normalizeFilename(file)
 
 	err = os.WriteFile(fmt.Sprintf("%s/%s", outFolder, outFile), body, 0644)
-	if err != nil {
-		return nil, err
-	}
+	checkError(err)
 
 	// Decompress file content before return
 	if strings.Contains(outFile, ".gz") {
@@ -96,34 +88,30 @@ func downloadAndReturnFileContent(repourl string, file string, outFolder string)
 		checkError(err)
 	}
 
-	return body, err
+	return body
 }
 
-func parseRepomd(repomdxml []byte) (*Repomd, error) {
+func parseRepomd(repomdxml []byte) *Repomd {
 	// Unmarshal XML content into Repomd struct
 	var repomd Repomd
 	err := xml.Unmarshal(repomdxml, &repomd)
-	if err != nil {
-		return nil, err
-	}
-	return &repomd, nil
+	checkError(err)
+
+	return &repomd
 }
 
 func ProcessRepomd() map[string][]byte {
 	var err error
 	repofilesxml := make(map[string][]byte)
 
-	repofilesxml["repomd"], err = downloadAndReturnFileContent(REPO_URL, REPOMD_FILE, *archiveFolderName)
-	checkError(err)
+	repofilesxml["repomd"] = downloadAndReturnFileContent(RepoUrl, RepomdFile, *archiveFolderName)
 
-	repomd, err := parseRepomd(repofilesxml["repomd"])
-	checkError(err)
+	repomd := parseRepomd(repofilesxml["repomd"])
 
 	for _, data := range repomd.Data {
 		switch data.Type {
 		case "primary", "filelists", "other":
-			repofilesxml[data.Type], err = downloadAndReturnFileContent(REPO_URL, data.Location.HRef, *archiveFolderName)
-			checkError(err)
+			repofilesxml[data.Type] = downloadAndReturnFileContent(RepoUrl, data.Location.HRef, *archiveFolderName)
 
 			filenameWithoutFolderAndChecksum := normalizeFilename(data.Location.HRef)
 			err = writeChecksumToFile(*archiveFolderName, filenameWithoutFolderAndChecksum, data.Checksum.Value)

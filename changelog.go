@@ -14,7 +14,7 @@ import (
 )
 
 func parseChangelog() map[string][]string {
-	file := fmt.Sprintf("%s/%s", *archiveFolderName, CHANGELOG_FILE)
+	file := fmt.Sprintf("%s/%s", *archiveFolderName, ChangelogFile)
 
 	f, err := os.Open(file)
 	checkError(err)
@@ -52,8 +52,7 @@ func parseChangelog() map[string][]string {
 }
 
 func ProcessChangelog() map[string][]string {
-	err := downloadFile(CHANGELOG_URL, CHANGELOG_FILE, *archiveFolderName)
-	checkError(err)
+	downloadFile(ChangelogUrl, ChangelogFile, *archiveFolderName)
 
 	if gitWorktreeModified(*gitRepoPath) {
 		featureBranch := "feat-update-archive-release-notes"
